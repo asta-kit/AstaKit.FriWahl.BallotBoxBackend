@@ -1,0 +1,13 @@
+{
+    "name": "astakit/friwahl-ballotboxbackend",
+    "type": "typo3-flow-package",
+    "description": "Server backend for ballot boxes in an election",
+    "require": {
+        "typo3/flow": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "AstaKit\\FriWahl\\BallotBoxBackend": "Classes"
+        }
+    }
+}
