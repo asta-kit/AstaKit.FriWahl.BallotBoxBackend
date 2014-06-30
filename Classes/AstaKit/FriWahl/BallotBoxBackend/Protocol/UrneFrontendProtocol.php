@@ -10,6 +10,7 @@ use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\EndOfFileException;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\QuitSessionException;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\AbstractCommand;
+use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\Command;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\ShowElectionsCommand;
 use AstaKit\FriWahl\Core\Domain\Model\BallotBox;
 use AstaKit\FriWahl\Core\Domain\Repository\ElectionRepository;
@@ -115,9 +116,20 @@ class UrneFrontendProtocol implements ProtocolHandler {
 		$this->ioHandler->close();
 	}
 
-	protected function getCommandObject($command) {
-		$commandClassName = str_replace(' ', '', ucwords(str_replace('-', ' ', $command))) . 'Command';
+	/**
+	 * Returns a command object
+	 *
+	 * @param string $commandName
+	 * @return Command
+	 * @throws \InvalidArgumentException
+	 */
+	protected function getCommandObject($commandName) {
+		$commandClassName = str_replace(' ', '', ucwords(str_replace('-', ' ', $commandName))) . 'Command';
 		$commandClassName = __NAMESPACE__ . '\\UrneFrontend\\' . $commandClassName;
+
+		if (!class_exists($commandClassName)) {
+			throw new \InvalidArgumentException('Unknown command ' . $commandName);
+		}
 
 		return new $commandClassName($this->ballotBox, $this->ioHandler);
 	}

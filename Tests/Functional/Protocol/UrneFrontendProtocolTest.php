@@ -153,6 +153,16 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 	/**
 	 * @test
 	 */
+	public function unknownCommandLeadsToError() {
+		$this->sendServerCommand(uniqid('command-'));
+		$this->runServerSession();
+
+		$this->assertCommandHasReturnedErrorCode(0, 65533);
+	}
+
+	/**
+	 * @test
+	 */
 	public function errorIsReturnedIfElectionIsNotActive() {
 		$this->electionBuilder->withoutElectionPeriods();
 
