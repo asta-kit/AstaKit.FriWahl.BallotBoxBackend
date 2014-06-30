@@ -1,10 +1,19 @@
 <?php
 namespace AstaKit\FriWahl\BallotBoxBackend\Tests\Functional;
+
+/*                                                                                    *
+ * This script belongs to the TYPO3 Flow package "AstaKit.FriWahl.BallotBoxBackend".  *
+ *                                                                                    *
+ *                                                                                    */
+
 use AstaKit\FriWahl\Core\Domain\Model\BallotBox;
 use AstaKit\FriWahl\Core\Domain\Model\Election;
+use AstaKit\FriWahl\Core\Domain\Model\ElectionPeriod;
 use AstaKit\FriWahl\Core\Domain\Model\EligibleVoter;
 use AstaKit\FriWahl\Core\Domain\Model\SingleListVoting;
 use AstaKit\FriWahl\Core\Domain\Model\Voting;
+use Doctrine\Common\Collections\ArrayCollection;
+use TYPO3\Flow\Persistence\PersistenceManagerInterface;
 
 
 /**
@@ -30,9 +39,11 @@ class ElectionBuilder {
 	protected $votings = array();
 
 
-	public function __construct($persistenceManager) {
+	public function __construct(PersistenceManagerInterface $persistenceManager) {
 		$this->persistenceManager = $persistenceManager;
+
 		$this->election = new Election('test-' . uniqid(), uniqid());
+		new ElectionPeriod(new \DateTime('-1 hour'), new \DateTime('+1 hour'), $this->election);
 		$this->persistenceManager->add($this->election);
 	}
 
@@ -41,6 +52,12 @@ class ElectionBuilder {
 	 */
 	public function getElection() {
 		return $this->election;
+	}
+
+	public function withoutElectionPeriods() {
+		$this->election->setPeriods(new ArrayCollection());
+
+		return $this;
 	}
 
 	public function withAnonymousBallotBox() {

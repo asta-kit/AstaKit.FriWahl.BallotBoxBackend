@@ -1,5 +1,11 @@
 <?php
 namespace AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\Protocol;
+
+/*                                                                                    *
+ * This script belongs to the TYPO3 Flow package "AstaKit.FriWahl.BallotBoxBackend".  *
+ *                                                                                    *
+ *                                                                                    */
+
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontendProtocol;
 use AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\ElectionBuilder;
 use AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\Protocol\Fixtures\RecordingStreamHandler;
@@ -93,6 +99,26 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->protocolHandler->run();
 	}
 
+	protected function assertCommandSucessful($commandNumber) {
+		$results = $this->ioHandler->getCommandResults();
+		$commandResult = $results[$commandNumber];
+
+		$this->assertStringStartsWith('+OK', $commandResult[0], 'First line of command result does not indicate success.');
+		if (count($commandResult) > 1) {
+			$this->assertEquals('', $commandResult[count($commandResult) - 1], 'Last line of command result is not empty.');
+		}
+	}
+
+	protected function assertCommandHasReturnedErrorCode($commandNumber, $errorCode) {
+		$results = $this->ioHandler->getCommandResults();
+		$commandResult = $results[$commandNumber];
+
+		$this->assertStringStartsWith('-' . $errorCode, $commandResult[0], 'First line of command result does not contain expected error code.');
+		if (count($commandResult) > 1) {
+			$this->assertEquals('', $commandResult[count($commandResult) - 1], 'Last line of command result is not empty.');
+		}
+	}
+
 	/**
 	 * @test
 	 */
@@ -121,15 +147,19 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->sendServerCommand('quit');
 		$this->runServerSession();
 
-		$results = $this->ioHandler->getCommandResults();
+		$this->assertCommandSucessful(0);
+	}
 
-		$this->assertEquals(
-			array(
-				'+OK',
-				'',
-			),
-			$results[0]
-		);
+	/**
+	 * @test
+	 */
+	public function errorIsReturnedIfElectionIsNotActive() {
+		$this->electionBuilder->withoutElectionPeriods();
+
+		$this->sendServerCommand('show-elections');
+		$this->runServerSession();
+
+		$this->assertCommandHasReturnedErrorCode(0, 11);
 	}
 
 }

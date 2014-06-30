@@ -78,7 +78,9 @@ class UrneFrontendProtocol implements ProtocolHandler {
 		while ($keepAlive) {
 			try {
 				$line = trim($this->ioHandler->readLine());
-echo ".";
+
+				$this->checkBallotBoxAvailable();
+
 				$this->log->log("Received line: " . $line, LOG_DEBUG);
 
 				if ($line == '') {
@@ -119,4 +121,15 @@ echo ".";
 
 		return new $commandClassName($this->ballotBox, $this->ioHandler);
 	}
+
+	/**
+	 * @return void
+	 * @throws ProtocolError
+	 */
+	protected function checkBallotBoxAvailable() {
+		if (!$this->ballotBox->getElection()->isActive()) {
+			throw new ProtocolError('Election inactive', ProtocolError::ERROR_BALLOTBOX_NOT_PERMITTED);
+		}
+	}
+
 }
