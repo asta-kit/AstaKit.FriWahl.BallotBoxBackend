@@ -171,4 +171,29 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->assertCommandHasReturnedErrorCode(0, 11);
 	}
 
+	/**
+	 * @test
+	 */
+	public function informationOnVoterCanBeFetched() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100, 'stuffandthings');
+		$this->sendServerCommand('check-voter', array('100FR'));
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(1, count($results));
+		$this->assertEquals(
+			array(
+				'+OK',
+				'Foo,Bar',
+				'stuffandthings',
+				'1 voting-0',
+				'2 voting-1',
+				'3 voting-2',
+				'',
+			),
+			$results[0]
+		);
+	}
+
 }
