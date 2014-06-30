@@ -93,8 +93,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 	}
 
 	protected function runServerSession() {
-		$this->persistenceManager->persistAll();
-		$this->persistenceManager->clearState();
+		$this->electionBuilder->finish();
 
 		$this->protocolHandler->run();
 	}

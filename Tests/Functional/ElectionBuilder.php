@@ -96,6 +96,14 @@ class ElectionBuilder {
 	}
 
 	/**
+	 * Does final operations for this election builder.
+	 */
+	public function finish() {
+		$this->persistenceManager->persistAll();
+		$this->persistenceManager->clearState();
+	}
+
+	/**
 	 * Creates a ballot box
 	 *
 	 * @param string $name
@@ -117,8 +125,6 @@ class ElectionBuilder {
 			$votings[] = $voting;
 		}
 
-		$this->persistenceManager->persistAll();
-
 		return $this;
 	}
 
@@ -127,7 +133,6 @@ class ElectionBuilder {
 		$voter->addDiscriminator('matriculationNumber', $matriculationNumber);
 		$voter->addDiscriminator('department', $department);
 		$this->persistenceManager->add($voter);
-		$this->persistenceManager->persistAll();
 
 		return $voter;
 	}
