@@ -6,6 +6,7 @@ namespace AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\Protocol;
  *                                                                                    *
  *                                                                                    */
 
+use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontendProtocol;
 use AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\ElectionBuilder;
 use AstaKit\FriWahl\BallotBoxBackend\Tests\Functional\Protocol\Fixtures\RecordingStreamHandler;
@@ -169,6 +170,29 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->runServerSession();
 
 		$this->assertCommandHasReturnedErrorCode(0, 11);
+	}
+
+	/**
+	 * @test
+	 */
+	public function voterCheckFailsIfVoterDoesNotExist() {
+		$this->sendServerCommand('check-voter', array('100AB'));
+
+		$this->runServerSession();
+
+		$this->assertCommandHasReturnedErrorCode(0, ProtocolError::ERROR_VOTER_NOT_FOUND);
+	}
+
+	/**
+	 * @test
+	 */
+	public function voterCheckFailsIfLettersDoNotMatch() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100, 'stuffandthings');
+		$this->sendServerCommand('check-voter', array('100YZ'));
+
+		$this->runServerSession();
+
+		$this->assertCommandHasReturnedErrorCode(0, ProtocolError::ERROR_LETTERS_DONT_MATCH);
 	}
 
 	/**

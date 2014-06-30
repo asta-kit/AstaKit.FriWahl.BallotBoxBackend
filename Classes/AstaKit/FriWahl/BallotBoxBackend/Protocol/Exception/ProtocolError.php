@@ -15,13 +15,20 @@ namespace AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception;
 class ProtocolError extends \RuntimeException {
 
 	const ERROR_BALLOTBOX_NOT_LOGGED_IN = 1;
+	const ERROR_LETTERS_DONT_MATCH = 4;
 	const ERROR_VOTER_NOT_FOUND = 6;
 	const ERROR_VOTE_ALREADY_CASTED = 8;
 	const ERROR_BALLOTBOX_NOT_PERMITTED = 11;
 
 	protected $errorMessages = array(
 		1 => 'Urne nicht angemeldet',
+		// only used if the election has not been initialized completely
+		2 => 'Jetzt nicht',
+		3 => 'Wird nicht gewaehlt',
+		4 => 'Buchstaben passen nicht zu Matrikel-Nr.',
+		5 => 'Stimme schon abgegeben',
 		6 => 'Wähler nicht gefunden',
+		7 => 'keine Matrikelnummer',
 		8 => 'Stimme bereits abgegeben',
 		9 => 'Interner Fehler',
 		10 => 'Urne gesperrt',

@@ -41,7 +41,8 @@ class CheckVoterCommand extends AbstractCommand {
 			throw new ProtocolError('', ProtocolError::ERROR_VOTER_NOT_FOUND);
 		}
 
-		// TODO verify name letters
+		$this->verifyVoterId($voter, $voterId);
+
 		$this->addResultLine($voter->getGivenName() . ',' . $voter->getFamilyName());
 		$this->addResultLine($voter->getDiscriminator('department')->getValue());
 
@@ -50,6 +51,21 @@ class CheckVoterCommand extends AbstractCommand {
 		foreach ($voter->getVotings() as $voting) {
 			++$i;
 			$this->addResultLine($i . ' ' . $voting->getName());
+		}
+	}
+
+	/**
+	 * Verifies the given voter id, i.e. checks if the letters at the end are correct
+	 *
+	 * @param EligibleVoter $voter
+	 * @param string $voterId
+	 * @throws \AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError
+	 */
+	protected function verifyVoterId(EligibleVoter $voter, $voterId) {
+		$passedLetters = substr($voterId, -2);
+		$voterLetters = substr($voter->getGivenName(), 0, 1) . substr($voter->getFamilyName(), -1);
+		if (strtolower($passedLetters) != strtolower($voterLetters)) {
+			throw new ProtocolError('', ProtocolError::ERROR_LETTERS_DONT_MATCH);
 		}
 	}
 
