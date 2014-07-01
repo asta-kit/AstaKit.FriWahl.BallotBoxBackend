@@ -137,7 +137,9 @@ class ElectionBuilder {
 	protected function createVoter($firstName, $lastName, $matriculationNumber, $department) {
 		$voter = new EligibleVoter($this->election, $firstName, $lastName, uniqid());
 		$voter->addDiscriminator('matriculationNumber', $matriculationNumber);
-		$voter->addDiscriminator('department', $department);
+		if ($department !== NULL) {
+			$voter->addDiscriminator('department', $department);
+		}
 		$this->persistenceManager->add($voter);
 
 		return $voter;
