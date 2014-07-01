@@ -10,7 +10,7 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @author Andreas Wolf <andreas.wolf@usta.de>
  */
-class ShowElectionsCommand extends AbstractCommand {
+class ShowElectionsCommand extends AbstractCommand implements ListingCommand {
 
 	/**
 	 * @var \TYPO3\Flow\Persistence\PersistenceManagerInterface

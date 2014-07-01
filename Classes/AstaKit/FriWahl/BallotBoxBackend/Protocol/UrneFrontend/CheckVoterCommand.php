@@ -21,7 +21,7 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @author Andreas Wolf <andreas.wolf@usta.de>
  */
-class CheckVoterCommand extends AbstractCommand {
+class CheckVoterCommand extends AbstractCommand implements ListingCommand {
 
 	/**
 	 * @var ElectionRepository

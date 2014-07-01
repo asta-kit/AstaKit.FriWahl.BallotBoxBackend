@@ -58,8 +58,10 @@ abstract class AbstractCommand implements Command {
 			$this->log->log('Printing output: ' . $line, LOG_DEBUG);
 			$this->ioHandler->writeLine($line);
 		}
-		// This empty line is used by the client to detect the end of a server response
-		$this->ioHandler->writeLine("");
+		if ($this instanceof ListingCommand) {
+			// This empty line is used by the client to detect the end of a server response
+			$this->ioHandler->writeLine("");
+		}
 		$this->result = array();
 	}
 
