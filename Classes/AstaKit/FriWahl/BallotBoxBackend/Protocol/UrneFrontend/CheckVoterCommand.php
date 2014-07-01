@@ -7,9 +7,6 @@ namespace AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend;
  *                                                                                    */
 
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError;
-use AstaKit\FriWahl\Core\Domain\Model\EligibleVoter;
-use AstaKit\FriWahl\Core\Domain\Repository\ElectionRepository;
-use TYPO3\Flow\Annotations as Flow;
 
 
 /**
@@ -21,58 +18,22 @@ use TYPO3\Flow\Annotations as Flow;
  *
  * @author Andreas Wolf <andreas.wolf@usta.de>
  */
-class CheckVoterCommand extends AbstractCommand implements ListingCommand {
-
-	/**
-	 * @var ElectionRepository
-	 * @Flow\Inject
-	 */
-	protected $electionRepository;
-
+class CheckVoterCommand extends VoterRelatedCommand implements ListingCommand {
 
 	public function process(array $parameters = NULL) {
 		$voterId = $parameters[0];
-		$matriculationNumber = substr($voterId, 0, -2);
-
-		/** @var EligibleVoter $voter */
-		$voter = $this->findVoterByMatriculationNumber($matriculationNumber);
-
-		if (!$voter) {
-			throw new ProtocolError('', ProtocolError::ERROR_VOTER_NOT_FOUND);
-		}
-
-		$this->verifyVoterId($voter, $voterId);
+		$voter = $this->findVoter($voterId);
 
 		$this->addResultLine($voter->getGivenName() . ',' . $voter->getFamilyName());
 		$this->addResultLine($voter->getDiscriminator('department')->getValue());
 
+		$electionVotings = $this->ballotBox->getElection()->getVotings();
 		// TODO use a consistent voting identifier mechanism
-		$i = 0;
 		foreach ($voter->getVotings() as $voting) {
-			++$i;
-			$this->addResultLine($i . ' ' . $voting->getName());
+			$index = $electionVotings->indexOf($voting) + 1;
+
+			$this->addResultLine($index . ' ' . $voting->getName());
 		}
-	}
-
-	/**
-	 * Verifies the given voter id, i.e. checks if the letters at the end are correct
-	 *
-	 * @param EligibleVoter $voter
-	 * @param string $voterId
-	 * @throws \AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError
-	 */
-	protected function verifyVoterId(EligibleVoter $voter, $voterId) {
-		$passedLetters = substr($voterId, -2);
-		$voterLetters = substr($voter->getGivenName(), 0, 1) . substr($voter->getFamilyName(), -1);
-		if (strtolower($passedLetters) != strtolower($voterLetters)) {
-			throw new ProtocolError('', ProtocolError::ERROR_LETTERS_DONT_MATCH);
-		}
-	}
-
-	protected function findVoterByMatriculationNumber($matriculationNumber) {
-		$election = $this->ballotBox->getElection();
-
-		return $this->electionRepository->findOneVoterByDiscriminator($election, 'matriculationNumber', $matriculationNumber);
 	}
 
 }

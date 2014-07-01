@@ -220,4 +220,28 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		);
 	}
 
+	/**
+	 * @test
+	 */
+	public function voterCanBeQueuedAndIsReturnedInQueue() {
+		$voter = $this->electionBuilder->withVoter('Foo', 'Bar', 100);
+
+		// enqueueing a voter for elections 1 and 2
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1', '2'));
+		$this->sendServerCommand('show-queue');
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(2, count($results));
+		$this->assertEquals(
+			array(
+				'+OK',
+				'100FR 1 2',
+				'',
+			),
+			$results[1]
+		);
+	}
+
 }
