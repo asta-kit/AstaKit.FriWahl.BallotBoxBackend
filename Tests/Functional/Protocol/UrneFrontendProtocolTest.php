@@ -79,10 +79,6 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->electionBuilder
 			->withNumberOfVotings(3)
 			->withAnonymousBallotBox();
-
-		$election = $this->electionBuilder->getElection();
-
-		$this->protocolHandler = new UrneFrontendProtocol($election->getBallotBoxes()->get(0), $this->ioHandler);
 	}
 
 	protected function sendServerCommand($command, array $parameters = array()) {
@@ -95,6 +91,10 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 
 	protected function runServerSession() {
 		$this->electionBuilder->finish();
+
+		$election = $this->electionBuilder->getElection();
+
+		$this->protocolHandler = new UrneFrontendProtocol($election->getBallotBoxes()->get(0), $this->ioHandler);
 
 		$this->protocolHandler->run();
 	}

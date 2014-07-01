@@ -99,8 +99,14 @@ class ElectionBuilder {
 	 * Does final operations for this election builder.
 	 */
 	public function finish() {
+		$electionId = $this->persistenceManager->getIdentifierByObject($this->election);
+
 		$this->persistenceManager->persistAll();
 		$this->persistenceManager->clearState();
+
+		// Re-fetch the election object to have a consistent memory state for all involved objects.
+		// Otherwise e.g. the array collection objects would not contain the same objects.
+		$this->election = $this->persistenceManager->getObjectByIdentifier($electionId, 'AstaKit\FriWahl\Core\Domain\Model\Election');
 	}
 
 	/**
