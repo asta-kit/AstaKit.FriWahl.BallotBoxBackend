@@ -123,13 +123,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 	protected function assertCommandResultIsEmptyList($commandNumber) {
 		$commandResult = $this->getResultsForCommandNumber($commandNumber);
 
-		$this->assertEquals(
-			array(
-				'+OK',
-				''
-			),
-			$commandResult
-		);
+		$this->assertCommandResultIsListWithContents($commandNumber, array());
 	}
 
 	protected function assertCommandResultIsListWithContents($commandNumber, $listContents) {
@@ -257,6 +251,103 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 				'100FR 1 2',
 			)
 		);
+	}
+
+	/**
+	 * @test
+	 */
+	public function queuedVoterCanBeCommittedAndIsRemovedFromQueueAfterwards() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100);
+
+		// enqueueing a voter for elections 1 and 2
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1', '2'));
+		$this->sendServerCommand('commit-queue-element', array('100FR'));
+		$this->sendServerCommand('show-queue');
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(3, count($results));
+		$this->assertCommandSuccessful(1);
+		$this->assertCommandSuccessful(2);
+		$this->assertCommandResultIsEmptyList(3);
+	}
+
+	/**
+	 * @test
+	 */
+	public function committedVoterCanBeQueuedAndCommittedAgainForDifferentVoting() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100);
+
+		// enqueueing a voter for elections 1 and 2
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1', '2'));
+		$this->sendServerCommand('commit-queue-element', array('100FR'));
+		$this->sendServerCommand('show-queue');
+		$this->sendServerCommand('insert-queue-element', array('100FR', '3'));
+		$this->sendServerCommand('commit-queue-element', array('100FR'));
+		$this->sendServerCommand('show-queue');
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(6, count($results));
+		$this->assertCommandSuccessful(1);
+		$this->assertCommandSuccessful(2);
+		$this->assertCommandResultIsEmptyList(3);
+		$this->assertCommandSuccessful(4);
+		$this->assertCommandSuccessful(5);
+		$this->assertCommandResultIsEmptyList(6);
+	}
+
+	/**
+	 * @test
+	 */
+	public function queuedVoterCanBeRemovedFromQueueAgain() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100);
+
+		// enqueueing a voter for elections 1 and 2
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1', '2'));
+		$this->sendServerCommand('delete-queue-element', array('100FR'));
+		$this->sendServerCommand('show-queue');
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(3, count($results));
+		$this->assertCommandSuccessful(1);
+		$this->assertCommandSuccessful(2);
+		$this->assertCommandResultIsEmptyList(3);
+	}
+
+	/**
+	 * @test
+	 */
+	public function removedVoterCanBeQueuedAndCommittedAgain() {
+		$this->electionBuilder->withVoter('Foo', 'Bar', 100);
+
+		// enqueueing a voter for elections 1 and 2
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1', '2')); // 1
+		$this->sendServerCommand('delete-queue-element', array('100FR'));           // 2
+		// use a different number of votings for second try
+		$this->sendServerCommand('insert-queue-element', array('100FR', '1'));      // 3
+		$this->sendServerCommand('show-queue');                                     // 4
+		$this->sendServerCommand('commit-queue-element', array('100FR'));           // 5
+		$this->sendServerCommand('show-queue');                                     // 6
+
+		$this->runServerSession();
+		$results = $this->ioHandler->getCommandResults();
+
+		$this->assertEquals(6, count($results));
+		$this->assertCommandSuccessful(1);
+		$this->assertCommandSuccessful(2);
+		$this->assertCommandSuccessful(3);
+		$this->assertCommandResultIsListWithContents(4,
+			array(
+				'100FR 1',
+			)
+		);
+		$this->assertCommandSuccessful(5);
+		$this->assertCommandResultIsEmptyList(6);
 	}
 
 }
