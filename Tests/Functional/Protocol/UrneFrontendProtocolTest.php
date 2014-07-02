@@ -99,9 +99,23 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->protocolHandler->run();
 	}
 
-	protected function assertCommandSuccessful($commandNumber) {
+	/**
+	 * @param integer $commandNumber
+	 * @return array
+	 */
+	protected function getResultsForCommandNumber($commandNumber) {
+		--$commandNumber;
 		$results = $this->ioHandler->getCommandResults();
-		$commandResult = $results[$commandNumber];
+		$commandResults = $results[$commandNumber];
+
+		return $commandResults;
+	}
+
+	/**
+	 * @param integer $commandNumber The number of the command, one-based
+	 */
+	protected function assertCommandSuccessful($commandNumber) {
+		$commandResult = $this->getResultsForCommandNumber($commandNumber);
 
 		$this->assertStringStartsWith('+OK', $commandResult[0], 'First line of command result does not indicate success.');
 		if (count($commandResult) > 1) {
@@ -109,14 +123,40 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		}
 	}
 
+	/**
+	 * @param integer $commandNumber The number of the command, one-based
+	 * @param integer $errorCode The error code to test for
+	 */
 	protected function assertCommandHasReturnedErrorCode($commandNumber, $errorCode) {
-		$results = $this->ioHandler->getCommandResults();
-		$commandResult = $results[$commandNumber];
+		$commandResult = $this->getResultsForCommandNumber($commandNumber);
 
 		$this->assertStringStartsWith('-' . $errorCode, $commandResult[0], 'First line of command result does not contain expected error code.');
 		if (count($commandResult) > 1) {
 			$this->assertEquals('', $commandResult[count($commandResult) - 1], 'Last line of command result is not empty.');
 		}
+	}
+
+	/**
+	 * @param integer $commandNumber The number of the command, one-based
+	 */
+	protected function assertCommandResultIsEmptyList($commandNumber) {
+		$commandResult = $this->getResultsForCommandNumber($commandNumber);
+
+		$this->assertEquals(
+			array(
+				'+OK',
+				''
+			),
+			$commandResult
+		);
+	}
+
+	protected function assertCommandResultIsListWithContents($commandNumber, $listContents) {
+		$commandResults = $this->getResultsForCommandNumber($commandNumber);
+
+		$this->assertCommandSuccessful($commandNumber);
+		$this->assertCount(count($listContents) + 2, $commandResults, 'Command result does not have right number of lines');
+		$this->assertEquals($listContents, array_slice($commandResults, 1, count($listContents)));
 	}
 
 	/**
@@ -128,15 +168,12 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 
 		$results = $this->ioHandler->getCommandResults();
 
-		$this->assertEquals(
+		$this->assertCommandResultIsListWithContents(1,
 			array(
-				'+OK',
 				'1 voting-0',
 				'2 voting-1',
 				'3 voting-2',
-				'',
-			),
-			$results[0]
+			)
 		);
 	}
 
@@ -147,7 +184,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->sendServerCommand('quit');
 		$this->runServerSession();
 
-		$this->assertCommandSuccessful(0);
+		$this->assertCommandSuccessful(1);
 	}
 
 	/**
@@ -157,7 +194,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->sendServerCommand(uniqid('command-'));
 		$this->runServerSession();
 
-		$this->assertCommandHasReturnedErrorCode(0, 65533);
+		$this->assertCommandHasReturnedErrorCode(1, 65533);
 	}
 
 	/**
@@ -171,7 +208,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 
 		$this->assertCount(0, $this->electionBuilder->getElection()->getPeriods());
 
-		$this->assertCommandHasReturnedErrorCode(0, 11);
+		$this->assertCommandHasReturnedErrorCode(1, 11);
 	}
 
 	/**
@@ -182,7 +219,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 
 		$this->runServerSession();
 
-		$this->assertCommandHasReturnedErrorCode(0, ProtocolError::ERROR_VOTER_NOT_FOUND);
+		$this->assertCommandHasReturnedErrorCode(1, ProtocolError::ERROR_VOTER_NOT_FOUND);
 	}
 
 	/**
@@ -194,7 +231,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 
 		$this->runServerSession();
 
-		$this->assertCommandHasReturnedErrorCode(0, ProtocolError::ERROR_LETTERS_DONT_MATCH);
+		$this->assertCommandHasReturnedErrorCode(1, ProtocolError::ERROR_LETTERS_DONT_MATCH);
 	}
 
 	/**
@@ -208,17 +245,14 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$results = $this->ioHandler->getCommandResults();
 
 		$this->assertEquals(1, count($results));
-		$this->assertEquals(
+		$this->assertCommandResultIsListWithContents(1,
 			array(
-				'+OK',
 				'Foo,Bar',
 				'stuffandthings',
 				'1 voting-0',
 				'2 voting-1',
 				'3 voting-2',
-				'',
-			),
-			$results[0]
+			)
 		);
 	}
 
@@ -236,13 +270,11 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$results = $this->ioHandler->getCommandResults();
 
 		$this->assertEquals(2, count($results));
-		$this->assertEquals(
+		$this->assertCommandSuccessful(1);
+		$this->assertCommandResultIsListWithContents(2,
 			array(
-				'+OK',
 				'100FR 1 2',
-				'',
-			),
-			$results[1]
+			)
 		);
 	}
 
