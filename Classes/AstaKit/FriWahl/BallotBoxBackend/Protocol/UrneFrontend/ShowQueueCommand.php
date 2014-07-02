@@ -1,5 +1,11 @@
 <?php
 namespace AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend;
+
+/*                                                                                    *
+ * This script belongs to the TYPO3 Flow package "AstaKit.FriWahl.BallotBoxBackend".  *
+ *                                                                                    *
+ *                                                                                    */
+
 use AstaKit\FriWahl\Core\Domain\Model\EligibleVoter;
 use TYPO3\Flow\Annotations as Flow;
 

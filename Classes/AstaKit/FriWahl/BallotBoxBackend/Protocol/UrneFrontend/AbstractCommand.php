@@ -1,6 +1,10 @@
 <?php
 namespace AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend;
 
+/*                                                                                    *
+ * This script belongs to the TYPO3 Flow package "AstaKit.FriWahl.BallotBoxBackend".  *
+ *                                                                                    *
+ *                                                                                    */
 
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\StreamHandler;
 use AstaKit\FriWahl\Core\Domain\Model\BallotBox;
