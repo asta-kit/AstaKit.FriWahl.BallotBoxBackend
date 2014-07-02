@@ -55,7 +55,12 @@ class ElectionBuilder {
 	}
 
 	public function withoutElectionPeriods() {
-		$this->election->setPeriods(new ArrayCollection());
+		// NOTE the periods have to be removed from both the persistence manager and the collection, otherwise they
+		// will still be persisted in the database.
+		foreach ($this->election->getPeriods() as $period) {
+			$this->persistenceManager->remove($period);
+		}
+		$this->election->getPeriods()->clear();
 
 		return $this;
 	}

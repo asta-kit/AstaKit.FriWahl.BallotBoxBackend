@@ -169,6 +169,8 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->sendServerCommand('show-elections');
 		$this->runServerSession();
 
+		$this->assertCount(0, $this->electionBuilder->getElection()->getPeriods());
+
 		$this->assertCommandHasReturnedErrorCode(0, 11);
 	}
 
