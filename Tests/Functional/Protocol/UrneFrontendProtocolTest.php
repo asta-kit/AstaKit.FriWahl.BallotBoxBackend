@@ -38,24 +38,6 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 	static protected $testablePersistenceEnabled = TRUE;
 
 	/**
-	 * Replacement for STDIN for the handler. The contents for this stream are written to testOutputStream
-	 *
-	 * @var resource
-	 */
-	protected $handlerInputStream;
-
-	/**
-	 * Replacement for STDOUT for the handler. The contents of this stream are read from testInputStream
-	 *
-	 * @var resource
-	 */
-	protected $handlerOutputStream;
-
-	protected $testInputStream;
-
-	protected $testOutputStream;
-
-	/**
 	 * @var UrneFrontendProtocol
 	 */
 	protected $protocolHandler;
@@ -95,7 +77,6 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$election = $this->electionBuilder->getElection();
 
 		$this->protocolHandler = new UrneFrontendProtocol($election->getBallotBoxes()->get(0), $this->ioHandler);
-
 		$this->protocolHandler->run();
 	}
 
