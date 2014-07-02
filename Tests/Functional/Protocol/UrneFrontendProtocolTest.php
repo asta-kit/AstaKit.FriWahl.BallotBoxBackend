@@ -99,7 +99,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->protocolHandler->run();
 	}
 
-	protected function assertCommandSucessful($commandNumber) {
+	protected function assertCommandSuccessful($commandNumber) {
 		$results = $this->ioHandler->getCommandResults();
 		$commandResult = $results[$commandNumber];
 
@@ -147,7 +147,7 @@ class UrneFrontendProtocolTest extends FunctionalTestCase {
 		$this->sendServerCommand('quit');
 		$this->runServerSession();
 
-		$this->assertCommandSucessful(0);
+		$this->assertCommandSuccessful(0);
 	}
 
 	/**
