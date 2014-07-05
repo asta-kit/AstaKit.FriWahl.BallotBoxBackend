@@ -64,7 +64,11 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	protected $ioHandler;
 
 
-	public function __construct(BallotBox $ballotBox, $streamHandler) {
+	/**
+	 * @param BallotBox $ballotBox
+	 * @param StreamHandler $streamHandler
+	 */
+	public function __construct(BallotBox $ballotBox, StreamHandler $streamHandler) {
 		$this->ballotBox = $ballotBox;
 		$this->ioHandler = $streamHandler;
 	}

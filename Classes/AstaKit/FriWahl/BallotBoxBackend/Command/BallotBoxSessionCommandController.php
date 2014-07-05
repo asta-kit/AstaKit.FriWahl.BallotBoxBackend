@@ -7,8 +7,10 @@ namespace AstaKit\FriWahl\BallotBoxBackend\Command;
  *                                                                                    */
 
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\StandardInOutStreamHandler;
+use AstaKit\FriWahl\BallotBoxBackend\Protocol\StreamHandler;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontendProtocol;
 use AstaKit\FriWahl\Core\Domain\Model\BallotBox;
+use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 
 
@@ -23,13 +25,19 @@ use TYPO3\Flow\Cli\CommandController;
 class BallotBoxSessionCommandController extends CommandController {
 
 	/**
+	 * @var StreamHandler
+	 * @Flow\Inject
+	 */
+	protected $streamHandler;
+
+	/**
 	 * Runs a voting session for a ballot box.
 	 *
 	 * @param BallotBox $ballotBox
 	 * @return void
 	 */
 	public function sessionCommand(BallotBox $ballotBox) {
-		$protocolHandler = new UrneFrontendProtocol($ballotBox, new StandardInOutStreamHandler());
+		$protocolHandler = new UrneFrontendProtocol($ballotBox, $this->streamHandler);
 		$protocolHandler->run();
 	}
 
