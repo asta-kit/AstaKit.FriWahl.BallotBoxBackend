@@ -1,4 +1,7 @@
 <?php
+// necessary for the custom signal handler used here
+declare(ticks = 10);
+
 namespace AstaKit\FriWahl\BallotBoxBackend\Protocol;
 
 /*                                                                                    *
@@ -6,12 +9,15 @@ namespace AstaKit\FriWahl\BallotBoxBackend\Protocol;
  *                                                                                    *
  *                                                                                    */
 
+use AstaKit\FriWahl\BallotBoxBackend\Domain\Model\Session;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\EndOfFileException;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\ProtocolError;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\QuitSessionException;
+use AstaKit\FriWahl\BallotBoxBackend\Protocol\Exception\SessionTerminatedException;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\AbstractCommand;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\Command;
 use AstaKit\FriWahl\BallotBoxBackend\Protocol\UrneFrontend\ShowElectionsCommand;
+use AstaKit\FriWahl\BallotBoxBackend\Session\SessionHandler;
 use AstaKit\FriWahl\Core\Domain\Model\BallotBox;
 use AstaKit\FriWahl\Core\Domain\Repository\ElectionRepository;
 use AstaKit\FriWahl\Core\Domain\Service\VotingService;
@@ -57,6 +63,19 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	protected $log;
 
 	/**
+	 * @var SessionHandler
+	 * @Flow\Inject
+	 */
+	protected $sessionHandler;
+
+	/**
+	 * The current ballot box session. Is regularly checked to see if it is still active.
+	 *
+	 * @var Session
+	 */
+	protected $session;
+
+	/**
 	 * The stream handler to handle input and output
 	 *
 	 * @var StreamHandler
@@ -71,6 +90,10 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	public function __construct(BallotBox $ballotBox, StreamHandler $streamHandler) {
 		$this->ballotBox = $ballotBox;
 		$this->ioHandler = $streamHandler;
+
+		pcntl_signal(SIGUSR1, function($signal) {
+			$this->handleSignal($signal);
+		});
 	}
 
 	/**
@@ -79,6 +102,8 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	 * @return void
 	 */
 	public function run() {
+		$this->session = $this->sessionHandler->startSessionForBallotBox($this->ballotBox);
+
 		$keepAlive = TRUE;
 		while ($keepAlive) {
 			try {
@@ -92,22 +117,14 @@ class UrneFrontendProtocol implements ProtocolHandler {
 					continue;
 				}
 
-				$parameters = explode(' ', $line);
-				$command = array_shift($parameters);
-
-				/** @var AbstractCommand $commandHandler */
-				$commandHandler = $this->getCommandObject($command);
-
-				$commandHandler->process($parameters);
-
-				$this->log->log('Command ' . $command . ' was processed', LOG_DEBUG);
-
-				$this->ioHandler->writeLine("+OK");
-				$commandHandler->printResult();
+				$this->handleCommand($line);
 
 			} catch (ProtocolError $e) {
 				// a generic error
 				$this->ioHandler->writeLine(sprintf("-%d %s", $e->getCode(), $e->getMessage()));
+			} catch (SessionTerminatedException $e) {
+				$this->ioHandler->writeLine("-1023 " . $e->getMessage());
+				$keepAlive = FALSE;
 			} catch (QuitSessionException $e) {
 				$keepAlive = FALSE;
 			} catch (EndOfFileException $e) {
@@ -141,10 +158,43 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	/**
 	 * @return void
 	 * @throws ProtocolError
+	 * @throws SessionTerminatedException
 	 */
 	protected function checkBallotBoxAvailable() {
 		if (!$this->ballotBox->getElection()->isActive()) {
 			throw new ProtocolError('Election inactive', ProtocolError::ERROR_BALLOTBOX_NOT_PERMITTED);
+		}
+		if (!$this->session->isRunning()) {
+			throw new SessionTerminatedException();
+		}
+	}
+
+	/**
+	 * @param $command
+	 */
+	protected function handleCommand($command) {
+		$parameters = explode(' ', $command);
+		$command = array_shift($parameters);
+
+		/** @var AbstractCommand $commandHandler */
+		$commandHandler = $this->getCommandObject($command);
+
+		$commandHandler->process($parameters);
+
+		$this->log->log('Command ' . $command . ' was processed', LOG_DEBUG);
+
+		$this->ioHandler->writeLine("+OK");
+		$commandHandler->printResult();
+	}
+
+	/**
+	 * @param $signal
+	 */
+	public function handleSignal($signal) {
+		if ($signal === SIGUSR1) {
+			$this->log->log('Received SIGUSR1', LOG_DEBUG);
+
+			$this->session->checkStatus();
 		}
 	}
 
