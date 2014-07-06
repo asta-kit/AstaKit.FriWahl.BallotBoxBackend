@@ -18,3 +18,10 @@ AstaKit\FriWahl\BallotBoxBackend\Protocol\VotingLoggerInterface:
       # Note: This cannot be changed here, adjust the setting if needed!
       setting: AstaKit.FriWahl.BallotBoxBackend.votingLogger.backendOptions
 
+AstaKit\FriWahl\BallotBoxBackend\Protocol\LoggingStreamHandler:
+  properties:
+# uncomment the following two lines to log the memory usage
+#    logMemoryConsumption:
+#      value: TRUE
+    originalHandler:
+      object: 'AstaKit\FriWahl\BallotBoxBackend\Protocol\StandardInOutStreamHandler'
