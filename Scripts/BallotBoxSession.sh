@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # adjust this to your local environment
 export FLOW_CONTEXT=Production
