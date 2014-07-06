@@ -33,7 +33,7 @@ class ShowQueueCommand extends AbstractCommand implements ListingCommand {
 
 		$queue = array();
 		foreach ($pendingVotes as $vote) {
-			$voterId = $this->getVoterIdForVoter($vote->getVoter());
+			$voterId = $vote->getVoter()->getIdentifier();
 
 			if (!isset($queue[$voterId])) {
 				$queue[$voterId] = array();
@@ -53,19 +53,6 @@ class ShowQueueCommand extends AbstractCommand implements ListingCommand {
 		foreach ($queue as $voterId => $elements) {
 			$this->addResultLine($voterId . ' ' . implode(' ', $elements));
 		}
-	}
-
-	/**
-	 * Returns the ID for the voter as displayed in the queue (and entered by the
-	 *
-	 * @param EligibleVoter $voter
-	 * @return string
-	 */
-	protected function getVoterIdForVoter(EligibleVoter $voter) {
-		$identifier = $voter->getDiscriminator('matriculationNumber')->getValue();
-		$identifier .= strtoupper(substr($voter->getGivenName(), 0, 1) . substr($voter->getFamilyName(), -1));
-
-		return $identifier;
 	}
 
 }

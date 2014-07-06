@@ -57,7 +57,7 @@ abstract class VoterRelatedCommand extends AbstractCommand {
 	 */
 	protected function verifyVoterId(EligibleVoter $voter, $voterId) {
 		$passedLetters = substr($voterId, -2);
-		$voterLetters = substr($voter->getGivenName(), 0, 1) . substr($voter->getFamilyName(), -1);
+		$voterLetters = substr($voter->getIdentifier(), -1);
 
 		if (strtolower($passedLetters) != strtolower($voterLetters)) {
 			throw new ProtocolError('', ProtocolError::ERROR_LETTERS_DONT_MATCH);
