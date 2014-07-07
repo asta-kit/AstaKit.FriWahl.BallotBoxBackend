@@ -61,6 +61,10 @@ class BallotBoxSessionCommandController extends CommandController {
 		$statuses = array();
 		/** @var $ballotBox BallotBox */
 		foreach ($election->getBallotBoxes() as $ballotBox) {
+			if (!$ballotBox->isAvailableForVotingSession()) {
+				continue;
+			}
+
 			/** @var Session $session */
 			$session = $this->sessionRepository->findOneByBallotBox($ballotBox);
 
@@ -71,26 +75,42 @@ class BallotBoxSessionCommandController extends CommandController {
 				if ($session instanceof UrneFrontendSession) {
 					$boxInfo['pid'] = $session->getPid();
 				}
+				$pendingVotes = $ballotBox->getQueuedVotesCount();
+				$boxInfo['votesPending'] = $pendingVotes;
 			} else {
 				$boxInfo['status'] = 'offline';
 				$boxInfo['started'] = '-';
 				$boxInfo['pid'] = '-';
+				$pendingVotes = 0;
+				$boxInfo['votesPending'] = '-';
 			}
+			$committedVotes = $ballotBox->getCommittedVotesCount();
+			$totalVotes = $pendingVotes + $committedVotes;
+			$boxInfo['votesCommitted'] = $committedVotes;
+			$boxInfo['votesTotal'] = $totalVotes;
+
 			$statuses[$ballotBox->getIdentifier()] = $boxInfo;
 		}
 
 		ksort($statuses);
 
-		$this->outputLine(str_pad('Ballot box', 40, ' ', STR_PAD_BOTH) . ' |  Status  |   Date started   |  PID  |');
-		$this->outputLine(str_pad('', 40, '-')                         . '-+----------+------------------+-------+');
-		foreach ($statuses as $ballotBox => $statusInfo) {
+		$this->outputLine(str_pad('', 40, ' ', STR_PAD_BOTH)           . ' |  Session |                  |       |           Votes               |');
+		$this->outputLine(str_pad('Ballot box', 40, ' ', STR_PAD_BOTH) . ' |  Status  |   Date started   |  PID  | Pending | Committed |  Total  |');
+		$this->outputLine(str_pad('', 40, '-')                         . '-+----------+------------------+-------+---------+-----------+---------+');
+		if (count($statuses) == 0) {
+			$this->outputLine(' No ballot box available for voting.');
+		}
+		foreach ($statuses as $ballotBoxIdentifier => $statusInfo) {
 			$dateStarted = $statusInfo['started'];
 			$pid = $statusInfo['pid'];
 			$this->outputLine(
-				str_pad($ballotBox, 40, ' ', STR_PAD_RIGHT) . ' | '
+				str_pad($ballotBoxIdentifier, 40, ' ', STR_PAD_RIGHT) . ' | '
 				. str_pad($statusInfo['status'], 8, ' ', STR_PAD_LEFT) . ' | '
 				. str_pad($dateStarted, 16, ' ', STR_PAD_LEFT) . ' | '
 				. str_pad($pid, 5, ' ', STR_PAD_LEFT) . ' | '
+				. str_pad($statusInfo['votesPending'], 7, ' ', STR_PAD_LEFT) . ' | '
+				. str_pad($statusInfo['votesCommitted'], 9, ' ', STR_PAD_LEFT) . ' | '
+				. str_pad($statusInfo['votesTotal'], 7, ' ', STR_PAD_LEFT) . ' | '
 			);
 		}
 	}
