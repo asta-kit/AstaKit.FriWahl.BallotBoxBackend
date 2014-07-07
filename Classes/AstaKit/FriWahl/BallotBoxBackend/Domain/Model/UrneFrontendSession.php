@@ -46,6 +46,13 @@ class UrneFrontendSession extends Session {
 		$this->pid = posix_getpid();
 	}
 
+	/**
+	 * @return int
+	 */
+	public function getPid() {
+		return $this->pid;
+	}
+
 	public function initializeObject() {
 		$this->queue = msg_get_queue(1);
 	}

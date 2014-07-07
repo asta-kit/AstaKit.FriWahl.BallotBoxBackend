@@ -58,6 +58,13 @@ abstract class Session {
 		return $this->ballotBox;
 	}
 
+	/**
+	 * @return \DateTime
+	 */
+	public function getDateStarted() {
+		return $this->dateStarted;
+	}
+
 	public function isRunning() {
 		$this->checkStatus();
 		if (!$this->isAlive()) {
