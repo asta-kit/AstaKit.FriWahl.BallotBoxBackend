@@ -57,9 +57,11 @@ abstract class VoterRelatedCommand extends AbstractCommand {
 	 */
 	protected function verifyVoterId(EligibleVoter $voter, $voterId) {
 		$passedLetters = substr($voterId, -2);
-		$voterLetters = substr($voter->getIdentifier(), -1);
+		$voterLetters = substr($voter->getIdentifier(), -2);
 
 		if (strtolower($passedLetters) != strtolower($voterLetters)) {
+			$this->log->log('Expected letters ' . $voterLetters . ', got ' . $passedLetters, LOG_DEBUG);
+
 			throw new ProtocolError('', ProtocolError::ERROR_LETTERS_DONT_MATCH);
 		}
 	}
