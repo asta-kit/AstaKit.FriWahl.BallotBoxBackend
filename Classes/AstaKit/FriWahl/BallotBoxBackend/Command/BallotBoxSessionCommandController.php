@@ -66,10 +66,10 @@ class BallotBoxSessionCommandController extends CommandController {
 			}
 
 			/** @var Session $session */
-			$session = $this->sessionRepository->findOneByBallotBox($ballotBox);
+			$session = $this->getActiveSessionForBallotBox($ballotBox);
 
 			$boxInfo = array();
-			if ($session && $session->isRunning()) {
+			if ($session) {
 				$boxInfo['status'] = 'online';
 				$boxInfo['started'] = $session->getDateStarted()->format('Y-m-d H:i');
 				if ($session instanceof UrneFrontendSession) {
@@ -113,6 +113,24 @@ class BallotBoxSessionCommandController extends CommandController {
 				. str_pad($statusInfo['votesTotal'], 7, ' ', STR_PAD_LEFT) . ' | '
 			);
 		}
+	}
+
+	/**
+	 * Returns the active session for the current ballot box.
+	 *
+	 * @param BallotBox $ballotBox
+	 * @return Session|null
+	 */
+	protected function getActiveSessionForBallotBox(BallotBox $ballotBox) {
+		$sessions = $this->sessionRepository->findByBallotBox($ballotBox);
+
+		/** @var $session Session */
+		foreach ($sessions as $session) {
+			if ($session->isRunning()) {
+				return $session;
+			}
+		}
+		return NULL;
 	}
 
 }
