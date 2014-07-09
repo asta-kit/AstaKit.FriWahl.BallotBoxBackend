@@ -164,6 +164,9 @@ class UrneFrontendProtocol implements ProtocolHandler {
 		if (!$this->ballotBox->getElection()->isActive()) {
 			throw new ProtocolError('Election inactive', ProtocolError::ERROR_BALLOTBOX_NOT_PERMITTED);
 		}
+		if (!$this->ballotBox->isAvailableForVotingSession()) {
+			throw new ProtocolError('Ballot box locked', ProtocolError::ERROR_BALLOTBOX_NOT_PERMITTED);
+		}
 		if (!$this->session->isRunning()) {
 			throw new SessionTerminatedException();
 		}
