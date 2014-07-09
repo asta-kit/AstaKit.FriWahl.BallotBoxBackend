@@ -82,6 +82,15 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	 */
 	protected $ioHandler;
 
+	/**
+	 *
+	 * Note: Flow will inject Doctrine\ORM\EntityManager here
+	 *
+	 * @var \Doctrine\Common\Persistence\ObjectManager
+	 * @Flow\Inject
+	 */
+	protected $entityManager;
+
 
 	/**
 	 * @param BallotBox $ballotBox
@@ -161,6 +170,10 @@ class UrneFrontendProtocol implements ProtocolHandler {
 	 * @throws SessionTerminatedException
 	 */
 	protected function checkBallotBoxAvailable() {
+		// check if our objects were changed from the outside world
+		$this->entityManager->refresh($this->ballotBox);
+		$this->entityManager->refresh($this->session);
+
 		if (!$this->ballotBox->getElection()->isActive()) {
 			throw new ProtocolError('Election inactive', ProtocolError::ERROR_BALLOTBOX_NOT_PERMITTED);
 		}
