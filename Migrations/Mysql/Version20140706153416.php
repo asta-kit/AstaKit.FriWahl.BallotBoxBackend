@@ -26,7 +26,7 @@ class Version20140706153416 extends AbstractMigration {
 
 			INDEX IDX_59D4EF4FB32AB266 (ballotbox),
 			PRIMARY KEY (persistence_object_identifier)
-		) DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE = InnoDB");
+		) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB");
 		$this->addSql("ALTER TABLE astakit_friwahl_ballotboxbackend_domain_model_session
 			ADD CONSTRAINT FK_59D4EF4FB32AB266
 				FOREIGN KEY (ballotbox)
