@@ -24,7 +24,7 @@ class CheckVoterCommand extends VoterRelatedCommand implements ListingCommand {
 		$voterId = $parameters[0];
 		$voter = $this->findVoter($voterId);
 
-		$this->addResultLine($voter->getGivenName() . ',' . $voter->getFamilyName());
+		$this->addResultLine($voter->getGivenName());
 		$this->addResultLine($voter->getDiscriminator('department')->getValue());
 
 		$electionVotings = $this->ballotBox->getElection()->getVotings();
